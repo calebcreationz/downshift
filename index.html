@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Downshift: a cost audit for agent decisions on SERV Reasoning</title>
-<meta name="description" content="Which model can take over an agent's decisions, and what it really costs. First results on 60 invented expense claims.">
+<meta name="description" content="Which model can take over an agent's decisions, and what it really costs. A cheap model matched on one policy and slipped on a rule with two parts.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -31,11 +31,8 @@ body{
 }
 main{max-width:40rem; margin:0 auto}
 a{color:var(--blue); text-underline-offset:.18em}
-a:focus-visible,input:focus-visible{outline:3px solid var(--blue); outline-offset:3px}
-.wordmark{
-  font-stretch:125%; font-weight:800; letter-spacing:-.01em;
-  font-size:1.05rem; margin:0 0 2.25rem;
-}
+a:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--blue); outline-offset:3px}
+.wordmark{font-stretch:125%; font-weight:800; letter-spacing:-.01em; font-size:1.05rem; margin:0 0 2.25rem}
 h1{
   font-stretch:112%; font-weight:800; line-height:1.08; letter-spacing:-.02em;
   font-size:clamp(2rem, 8.5vw, 3.1rem); margin:0 0 1rem;
@@ -61,22 +58,19 @@ tr.pick td{font-weight:500}
 tr.pick td:first-child span{background:var(--mark); padding:.05rem .4rem}
 .note{font-family:var(--mono); font-size:.78rem; color:var(--muted); margin:.8rem 0 0}
 
-.calc{margin-top:1.6rem; padding-top:1.1rem; border-top:1px solid var(--rule)}
-.calc label{display:block; font-weight:600; margin-bottom:.4rem}
-.calc input{
-  font:inherit; font-family:var(--mono); width:100%; max-width:14rem;
+.calc label{display:block; font-weight:600; margin:1rem 0 .4rem}
+.calc input,.calc select{
+  font:inherit; font-family:var(--mono); width:100%; max-width:22rem;
   padding:.5rem .65rem; color:var(--ink); background:var(--paper);
   border:1px solid var(--rule); border-radius:3px;
 }
-dl{margin:1rem 0 .5rem; font-family:var(--mono); font-size:.95rem}
+dl{margin:1.1rem 0 .5rem; font-family:var(--mono); font-size:.95rem}
 dl div{display:flex; gap:.5rem; align-items:baseline}
 dl div::after{content:""; order:2; flex:1; border-bottom:1px dotted var(--rule); margin:0 .2rem}
 dt{order:1}
 dd{order:3; margin:0; font-weight:500}
 #save{font-weight:600; margin:.6rem 0 0}
 
-.counts{font-family:var(--mono); font-size:.88rem; margin:.5rem 0 1rem; padding:.7rem .9rem; background:var(--slip); border-left:3px solid var(--rule)}
-.counts div{padding:.12rem 0}
 ul{padding-left:1.2rem; max-width:62ch}
 li{margin:.4rem 0}
 hr{border:0; border-top:1px solid var(--rule); margin:3rem 0 1rem}
@@ -88,14 +82,14 @@ footer{color:var(--muted); font-size:.92rem}
 <main>
   <p class="wordmark">Downshift</p>
 
-  <h1>A model a tenth of the price gave the same answers</h1>
-  <p class="lede">Downshift audits which model can take over an agent’s decisions on SERV Reasoning, then checks the cost against the bill. These are first results from 60 invented expense claims, so read them as a measurement of one task, not a promise.</p>
+  <h1>A tenth of the price, until a rule had two parts</h1>
+  <p class="lede">Downshift audits which model can take over an agent’s decisions on SERV Reasoning, then checks the cost against the bill. These are first results from invented expense claims. A cheap model matched a pricier one on one policy and slipped on another, so read them as measurements of two tasks, not a promise.</p>
 
-  <section class="slip" aria-labelledby="slip-title">
-    <h2 id="slip-title">60 expense-claim decisions</h2>
+  <section class="slip" aria-labelledby="a-title">
+    <h2 id="a-title">Policy A: 60 claims</h2>
     <p class="sub">9 rules. Every answer checked by code. Low reasoning effort, through SERV.</p>
     <table>
-      <caption>Accuracy and cost for 60 decisions, by model</caption>
+      <caption>Accuracy and cost for 60 decisions on Policy A, by model</caption>
       <thead><tr><th scope="col">Model</th><th scope="col">Right</th><th scope="col">Cost</th></tr></thead>
       <tbody>
         <tr><td>GPT-5.4 Mini</td><td>60/60</td><td>$0.068</td></tr>
@@ -104,69 +98,103 @@ footer{color:var(--muted); font-size:.92rem}
         <tr class="pick"><td><span>GPT-6-Luna</span></td><td>60/60</td><td>$0.0067</td></tr>
       </tbody>
     </table>
-    <p class="note">Cost is estimated from the token counts the API reports and the listed prices. *Recomputed at Gemini’s listed price; see the billing note below.</p>
+    <p class="note">The cheapest model with full marks is highlighted.</p>
+  </section>
 
-    <div class="calc">
-      <label for="vol">Decisions per month</label>
-      <input id="vol" type="number" inputmode="numeric" min="1" step="1000" value="100000">
-      <dl id="out" aria-live="polite"></dl>
-      <p id="save"></p>
-      <p class="note">Uses the cost per decision from this task, about 600 input tokens each. Yours will differ.</p>
-    </div>
+  <section class="slip" aria-labelledby="b-title">
+    <h2 id="b-title">Policy B: 40 claims</h2>
+    <p class="sub">9 rules, including “personal card and over $300”. Same checks, with the format fix described below.</p>
+    <table>
+      <caption>Accuracy and cost for 40 decisions on Policy B, by model</caption>
+      <thead><tr><th scope="col">Model</th><th scope="col">Right</th><th scope="col">Cost</th></tr></thead>
+      <tbody>
+        <tr><td>GPT-5.4 Mini</td><td>37/40</td><td>$0.049</td></tr>
+        <tr class="pick"><td><span>Gemini 3.8 Flash*</span></td><td>40/40</td><td>$0.025</td></tr>
+        <tr><td>GPT-5.4 Nano</td><td>35/40</td><td>$0.015</td></tr>
+        <tr><td>GPT-6-Luna</td><td>34/40</td><td>$0.0055</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Cost is estimated from the token counts the API reports and the listed prices. *Gemini’s cost uses its listed price; see the billing note below.</p>
+  </section>
+
+  <section class="slip calc" aria-labelledby="c-title">
+    <h2 id="c-title">What it means per month</h2>
+    <label for="vol">Decisions per month</label>
+    <input id="vol" type="number" inputmode="numeric" min="1" step="1000" value="100000">
+    <label for="set">Test set</label>
+    <select id="set">
+      <option value="a">Policy A (60 claims)</option>
+      <option value="b">Policy B (40 claims)</option>
+    </select>
+    <dl id="out" aria-live="polite"></dl>
+    <p id="save"></p>
+    <p class="note">Each line shows monthly cost and the share of right answers. The summary picks the cheapest model that scored 95% or better. Costs use about 600 input tokens per decision. Yours will differ.</p>
   </section>
 
   <h2>What the audit found</h2>
 
-  <h3>Luna matched Mini on both test sets for about a tenth of the cost</h3>
-  <p>On the 60 claims above, Luna and Mini both scored 60 out of 60. Luna cost $0.0067 and Mini $0.068. A second set of 40 claims under a 17-rule policy gave the same picture: all four models scored 40 out of 40, and Luna cost $0.0064 against Mini’s $0.058. Nano was cheaper than Mini but missed 6 of the 60.</p>
+  <h3>On one policy a tenth of the price matched, on another it did not</h3>
+  <p>On Policy A, Luna and Mini both scored 60 out of 60, for $0.0067 and $0.068. A 17-rule policy on 40 other claims also gave 40 out of 40 for all four models, with Luna at $0.0064 and Mini at $0.058. On Policy B the order changed. Gemini 3.8 Flash scored 40 out of 40 for $0.025, Mini 37 for $0.049, Nano 35 for $0.015 and Luna 34 for $0.0055. Luna’s 34 came up in two separate runs. The best buy depended on the policy, which is why Downshift tests your own rules.</p>
+
+  <h3>Short policies broke the answer format, and one line fixed it</h3>
+  <p>In the first sweep, models often decided correctly but not in the one word we asked for. At 9 rules, strict parsing gave Nano 4 out of 40 and Luna 20, because replies began “APPROVED”, “DECISION” or JSON. We added one line: reply with only the verdict word, with no other text and no JSON. Bad-format replies fell to zero in all seven runs with that line, across four models. Nano went from 4 to 35 at 9 rules and from 21 to 40 at 5 rules. A retry for bad format was built in and never triggered. A gate should still check the format.</p>
+
+  <h3>What was left was half a rule</h3>
+  <p>Luna’s six misses on Policy B were real. Five were claims paid by company card with a total over $300. The policy escalates only if the card is personal and the total is over $300. Luna escalated anyway, as if the rule had only its second half. The sixth was a total of exactly $1,000.00 against “over $1,000”. Mini over-escalated three times on the same set and Gemini never did. We checked each of Luna’s six against the rule by hand, and the reference answers were right every time.</p>
 
   <h3>The raw switch does not switch</h3>
   <p>SERV’s docs describe a request header that turns the reasoning layer off, so a model can be compared with and without it. On chat completions it made no difference. We sent the same one-line request to GPT-5.4 Nano four ways: no header, then three spellings of the header. Every request reported 197 input tokens. In the Playground, raw mode used 172 input tokens where SERV used 385 for the same prompt, so the layer is visible when it is off.</p>
-  <p>Because of this, the results here compare models with each other. They do not show what SERV adds over calling a model directly. We reported the header to the OpenServ team and had no answer when this page was written.</p>
-
-  <h3>Short policies broke the answer format, not the reasoning</h3>
-  <p>With a 9-rule policy in the sweep, models often decided correctly but not in the one word we asked for. Strict parsing scored them like this:</p>
-  <div class="counts">
-    <div>Luna: 20 exact, 14 “APPROVED” or “REJECTED”, 6 wrong decisions</div>
-    <div>Nano: 4 exact, 10 “APPROVED” or “REJECTED”, 24 began “DECISION” or “RESULT”, 2 wrong decisions</div>
-    <div>Gemini 3.8 Flash: 10 exact, 30 began “DECISION” or “BASED”</div>
-  </div>
-  <p>The 60-claim run used a different prompt layout and had no format failures. At 17 rules every model answered in the right format. We did not test the obvious fix, a stricter instruction line, because credits ran out. Any gate built on a model needs a format check and a retry.</p>
+  <p>Because of this, the results here compare models with each other. They do not show what SERV adds over calling a model directly. We reported the header to the OpenServ team and had no answer on it when this page was written.</p>
 
   <h3>The cost estimate was wrong once, and the bill caught it</h3>
-  <p>Downshift estimates cost from reported token counts and listed prices. For Gemini 3.8 Flash we used another Gemini model’s price, so the estimate was about $0.07 where the console billed $0.44 across 283 requests. For Mini, Nano and Luna, the estimates came in 5 to 30 percent under the billed totals ($0.28, $0.16 and $0.06, which also include playground tests and retries). The Gemini figure above is recomputed at its listed $1.00 and $4.50 per million tokens. Downshift treats the bill as the source of truth.</p>
+  <p>Downshift estimates cost from reported token counts and listed prices. For Gemini 3.8 Flash we first used another Gemini model’s price, so the estimate was about $0.07 where the console billed $0.44 across 283 requests. For Mini, Nano and Luna, the estimates came in 5 to 30 percent under the billed totals ($0.28, $0.16 and $0.06, which also include playground tests and retries). Gemini’s figures here use its listed $1.00 and $4.50 per million tokens. Downshift treats the bill as the source of truth.</p>
 
   <h2>What this does not show</h2>
   <ul>
-    <li>It is one invented task with 40 to 100 claims per run and one run per setup. Treat small gaps, like 54 against 60, as hints.</li>
-    <li>Answers are computed by code from the policy, so no one labelled anything, but the policy is simpler than real company rules.</li>
+    <li>It is two invented policies with 40 to 100 claims per run. Luna’s Policy B score repeated exactly, but Mini’s 37 and Gemini’s 40 are single runs, so treat the gap between them as a hint.</li>
+    <li>Answers are computed by code from the policy, so no one labelled anything, but the policies are simpler than real company rules.</li>
     <li>There is no raw baseline, so nothing here shows what SERV adds over a direct call.</li>
-    <li>Gemini’s cost at 17 rules is not shown because the token counts were not saved.</li>
+    <li>The 17-rule set had only 4 APPROVE cases out of 40, so over-escalation would barely show there. Mini was not run on the 5- and 13-rule sets, and Gemini’s cost at 17 rules is not shown.</li>
   </ul>
 
   <h2>Run it yourself</h2>
-  <p>The harness is in this repo. It needs a SERV API key and about $0.20 of credit, and runs in a Colab notebook. <a href="harness_sweep.py">harness_sweep.py</a> is the policy-size sweep and <a href="harness_60cases.py">harness_60cases.py</a> produced the receipt above. The <a href="README.md">README</a> has the details.</p>
+  <p>The harness is in this repo. It needs a SERV API key and a few tenths of a dollar of credit, and runs in a Colab notebook. <a href="harness_60cases.py">harness_60cases.py</a> produced Policy A. <a href="harness_sweep.py">harness_sweep.py</a> is the policy-size sweep. <a href="harness_format_fix.py">harness_format_fix.py</a> runs the format fix and the Policy B comparison. The <a href="README.md">README</a> has the details.</p>
 
   <hr>
   <footer>Built for SERV Hackathon 02, Open track. Source: <a href="https://github.com/calebcreationz/downshift">github.com/calebcreationz/downshift</a></footer>
 </main>
 
 <script>
-var PER = [["GPT-5.4 Mini", 0.001133], ["Gemini 3.8 Flash", 0.000635], ["GPT-5.4 Nano", 0.000348], ["GPT-6-Luna", 0.000112]];
+var SETS = {
+  a: [["GPT-5.4 Mini", 0.001133, 100], ["Gemini 3.8 Flash", 0.000635, 100], ["GPT-5.4 Nano", 0.000348, 90], ["GPT-6-Luna", 0.000112, 100]],
+  b: [["GPT-5.4 Mini", 0.0012175, 92.5], ["Gemini 3.8 Flash", 0.00063, 100], ["GPT-5.4 Nano", 0.00037, 87.5], ["GPT-6-Luna", 0.0001375, 85]]
+};
 function money(n){
   return n < 10 ? "$" + n.toFixed(2) : "$" + Math.round(n).toLocaleString("en-US");
 }
 function draw(){
   var v = Math.max(1, Number(document.getElementById("vol").value) || 0);
-  document.getElementById("out").innerHTML = PER.map(function(p){
-    return "<div><dt>" + p[0] + "</dt><dd>" + money(v * p[1]) + "</dd></div>";
+  var rows = SETS[document.getElementById("set").value];
+  document.getElementById("out").innerHTML = rows.map(function(r){
+    return "<div><dt>" + r[0] + "</dt><dd>" + money(v * r[1]) + " · " + r[2] + "%</dd></div>";
   }).join("");
-  var mini = v * PER[0][1], luna = v * PER[3][1];
-  document.getElementById("save").textContent =
-    "Moving from Mini to Luna saves about " + money(mini - luna) + " a month at this volume (" +
-    Math.round((1 - luna / mini) * 100) + "%).";
+  var mini = rows[0];
+  var ok = rows.filter(function(r){ return r[2] >= 95; }).sort(function(a, b){ return a[1] - b[1]; });
+  var pick = ok[0], msg;
+  if (!pick) {
+    msg = "No model scored 95% or better on this set.";
+  } else if (pick === mini) {
+    msg = "Mini is already the cheapest model scoring 95% or better here.";
+  } else {
+    var cut = Math.round((1 - pick[1] / mini[1]) * 100);
+    msg = mini[2] >= 95
+      ? "Moving from Mini to " + pick[0] + " saves about " + money(v * (mini[1] - pick[1])) + " a month (" + cut + "%) at " + pick[2] + "% accuracy."
+      : "Mini scores " + mini[2] + "% here. " + pick[0] + " scores " + pick[2] + "% and costs " + cut + "% less than Mini.";
+  }
+  document.getElementById("save").textContent = msg;
 }
 document.getElementById("vol").addEventListener("input", draw);
+document.getElementById("set").addEventListener("change", draw);
 draw();
 </script>
 </body>
