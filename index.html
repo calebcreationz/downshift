@@ -103,13 +103,15 @@ footer{color:var(--muted); font-size:.92rem}
 
   <section class="slip" aria-labelledby="b-title">
     <h2 id="b-title">Policy B: 40 claims</h2>
-    <p class="sub">9 rules, including “personal card and over $300”. Same checks, with the format fix described below.</p>
+    <p class="sub">9 rules, including “personal card and over $300”. Same checks, with the format fix described below. The “checks” rows send only Luna’s ESCALATE answers to a second model.</p>
     <table>
       <caption>Accuracy and cost for 40 decisions on Policy B, by model</caption>
       <thead><tr><th scope="col">Model</th><th scope="col">Right</th><th scope="col">Cost</th></tr></thead>
       <tbody>
         <tr><td>GPT-5.4 Mini</td><td>37/40</td><td>$0.049</td></tr>
-        <tr class="pick"><td><span>Gemini 3.8 Flash*</span></td><td>40/40</td><td>$0.025</td></tr>
+        <tr><td>Luna + Mini checks</td><td>37/40</td><td>$0.036</td></tr>
+        <tr><td>Gemini 3.8 Flash*</td><td>40/40</td><td>$0.025</td></tr>
+        <tr class="pick"><td><span>Luna + Gemini checks</span></td><td>40/40</td><td>$0.019</td></tr>
         <tr><td>GPT-5.4 Nano</td><td>35/40</td><td>$0.015</td></tr>
         <tr><td>GPT-6-Luna</td><td>34/40</td><td>$0.0055</td></tr>
       </tbody>
@@ -142,6 +144,9 @@ footer{color:var(--muted); font-size:.92rem}
   <h3>What was left was half a rule</h3>
   <p>Luna’s six misses on Policy B were real. Five were claims paid by company card with a total over $300. The policy escalates only if the card is personal and the total is over $300. Luna escalated anyway, as if the rule had only its second half. The sixth was a total of exactly $1,000.00 against “over $1,000”. Mini over-escalated three times on the same set and Gemini never did. We checked each of Luna’s six against the rule by hand, and the reference answers were right every time.</p>
 
+  <h3>A stronger checker on Luna’s escalations changed the winner</h3>
+  <p>Luna’s six misses were all over-escalations, so we sent only Luna’s ESCALATE answers (21 of 40) to a second model to decide again. With Gemini 3.8 Flash as the checker, the pair scored 40 out of 40 for $0.019, against $0.025 for Gemini alone, about 26 percent cheaper. With Mini as the checker, the pair scored 37 out of 40 for $0.036: no more accurate than Mini alone, though 26 percent cheaper, and dearer than Gemini alone. So the checker’s own accuracy decided it. This works here because Luna’s errors all went one way. A wrong APPROVE would never reach the checker. It was one run on 40 claims.</p>
+
   <h3>The raw switch does not switch</h3>
   <p>SERV’s docs describe a request header that turns the reasoning layer off, so a model can be compared with and without it. On chat completions it made no difference. We sent the same one-line request to GPT-5.4 Nano four ways: no header, then three spellings of the header. Every request reported 197 input tokens. In the Playground, raw mode used 172 input tokens where SERV used 385 for the same prompt, so the layer is visible when it is off.</p>
   <p>Because of this, the results here compare models with each other. They do not show what SERV adds over calling a model directly. We reported the header to the OpenServ team and had no answer on it when this page was written.</p>
@@ -154,11 +159,12 @@ footer{color:var(--muted); font-size:.92rem}
     <li>It is two invented policies with 40 to 100 claims per run. Luna’s Policy B score repeated exactly, but Mini’s 37 and Gemini’s 40 are single runs, so treat the gap between them as a hint.</li>
     <li>Answers are computed by code from the policy, so no one labelled anything, but the policies are simpler than real company rules.</li>
     <li>There is no raw baseline, so nothing here shows what SERV adds over a direct call.</li>
+    <li>The checker test was one run on 40 claims, and it only catches errors in the direction it routes (Luna’s ESCALATE answers).</li>
     <li>The 17-rule set had only 4 APPROVE cases out of 40, so over-escalation would barely show there. Mini was not run on the 5- and 13-rule sets, and Gemini’s cost at 17 rules is not shown.</li>
   </ul>
 
   <h2>Run it yourself</h2>
-  <p>The harness is in this repo. It needs a SERV API key and a few tenths of a dollar of credit, and runs in a Colab notebook. <a href="harness_60cases.py">harness_60cases.py</a> produced Policy A. <a href="harness_sweep.py">harness_sweep.py</a> is the policy-size sweep. <a href="harness_format_fix.py">harness_format_fix.py</a> runs the format fix and the Policy B comparison. The <a href="README.md">README</a> has the details.</p>
+  <p>The harness is in this repo. It needs a SERV API key and a few tenths of a dollar of credit, and runs in a Colab notebook. <a href="harness_60cases.py">harness_60cases.py</a> produced Policy A. <a href="harness_sweep.py">harness_sweep.py</a> is the policy-size sweep. <a href="harness_format_fix.py">harness_format_fix.py</a> runs the format fix and the Policy B comparison. <a href="harness_cascade.py">harness_cascade.py</a> runs the checker test. The <a href="README.md">README</a> has the details.</p>
 
   <hr>
   <footer>Built for SERV Hackathon 02, Open track. Source: <a href="https://github.com/calebcreationz/downshift">github.com/calebcreationz/downshift</a></footer>
@@ -167,7 +173,7 @@ footer{color:var(--muted); font-size:.92rem}
 <script>
 var SETS = {
   a: [["GPT-5.4 Mini", 0.001133, 100], ["Gemini 3.8 Flash", 0.000635, 100], ["GPT-5.4 Nano", 0.000348, 90], ["GPT-6-Luna", 0.000112, 100]],
-  b: [["GPT-5.4 Mini", 0.0012175, 92.5], ["Gemini 3.8 Flash", 0.00063, 100], ["GPT-5.4 Nano", 0.00037, 87.5], ["GPT-6-Luna", 0.0001375, 85]]
+  b: [["GPT-5.4 Mini", 0.0012175, 92.5], ["Gemini 3.8 Flash", 0.00063, 100], ["Luna + Mini checks", 0.000895, 92.5], ["GPT-5.4 Nano", 0.00037, 87.5], ["Luna + Gemini checks", 0.0004675, 100], ["GPT-6-Luna", 0.0001375, 85]]
 };
 function money(n){
   return n < 10 ? "$" + n.toFixed(2) : "$" + Math.round(n).toLocaleString("en-US");
